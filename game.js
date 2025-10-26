@@ -95,10 +95,6 @@ class Game {
         this.canvas = document.getElementById('game-canvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Set canvas size
-        this.resizeCanvas();
-        window.addEventListener('resize', () => this.resizeCanvas());
-        
         // Game state
         this.state = GameState.PLAYER_TURN;
         this.actionMode = ActionMode.NONE;
@@ -113,6 +109,10 @@ class Game {
         
         // Message log
         this.messages = [];
+        
+        // Set canvas size (this will also set camera)
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
         
         // Initialize game
         this.initTerrain();
@@ -431,8 +431,8 @@ class Game {
         const y = screenY - this.cameraY;
         
         // Isometric coordinate conversion
-        const gridX = Math.floor((x / TILE_WIDTH + y / TILE_HEIGHT) / 2);
-        const gridY = Math.floor((y / TILE_HEIGHT - x / TILE_WIDTH) / 2);
+        const gridX = Math.round((x / TILE_WIDTH + y / TILE_HEIGHT) / 2);
+        const gridY = Math.round((y / TILE_HEIGHT - x / TILE_WIDTH) / 2);
         
         if (this.isValidTile(gridX, gridY)) {
             return { x: gridX, y: gridY };
@@ -442,8 +442,9 @@ class Game {
     
     gridToScreen(gridX, gridY) {
         // Convert grid coordinates to screen coordinates (isometric)
+        // Returns the center of the tile
         const x = (gridX - gridY) * (TILE_WIDTH / 2);
-        const y = (gridX + gridY) * (TILE_HEIGHT / 2);
+        const y = (gridX + gridY) * (TILE_HEIGHT / 2) + TILE_HEIGHT / 2;
         
         return {
             x: x + this.cameraX,
@@ -670,5 +671,5 @@ class Game {
 
 // Initialize game when page loads
 window.addEventListener('load', () => {
-    new Game();
+    window.game = new Game();
 });
