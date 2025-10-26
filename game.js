@@ -110,7 +110,7 @@ class Game {
         // Message log
         this.messages = [];
         
-        // Set canvas size (this will also set camera)
+        // Set canvas size and initialize camera position
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
         
@@ -442,9 +442,9 @@ class Game {
     
     gridToScreen(gridX, gridY) {
         // Convert grid coordinates to screen coordinates (isometric)
-        // Returns the center of the tile
+        // Returns the center of the tile for better click detection
         const x = (gridX - gridY) * (TILE_WIDTH / 2);
-        const y = (gridX + gridY) * (TILE_HEIGHT / 2) + TILE_HEIGHT / 2;
+        const y = (gridX + gridY) * (TILE_HEIGHT / 2) + TILE_HEIGHT / 2; // Add half tile height to center
         
         return {
             x: x + this.cameraX,
