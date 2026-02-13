@@ -1,0 +1,52 @@
+{
+  "name": "test_arena",
+  "width": 16,
+  "height": 16,
+  "depth": 1,
+  "layers": [
+    {
+      "tiles": [
+        ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open",{"terrain":"open","walkable":true,"blocks_los":false,"cover":{"east":"half"}},"open","open","open","open","open","open","open","open",{"terrain":"open","walkable":true,"blocks_los":false,"cover":{"west":"half"}},"open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open",{"terrain":"wall","walkable":false,"blocks_los":true,"destructible":true,"hp":60},"door",{"terrain":"wall","walkable":false,"blocks_los":true,"destructible":true,"hp":60},"open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open",{"terrain":"wall","walkable":false,"blocks_los":true,"destructible":true,"hp":60},"open",{"terrain":"wall","walkable":false,"blocks_los":true,"destructible":true,"hp":60},"open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open",{"terrain":"open","walkable":true,"blocks_los":false,"cover":{"south":"full","east":"full"}},"open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open",{"terrain":"open","walkable":true,"blocks_los":false,"cover":{"north":"half"}},"open","open","open","open","open","open","open","open",{"terrain":"open","walkable":true,"blocks_los":false,"cover":{"north":"half"}},"open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","open","open","open","open","open","open","open","open","open","open","open","open","open","open","wall"],
+        ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"]
+      ]
+    }
+  ],
+  "spawn_zones": [
+    {
+      "player": 0,
+      "tiles": [
+        {"x": 1, "y": 1, "z": 0},
+        {"x": 2, "y": 1, "z": 0},
+        {"x": 3, "y": 1, "z": 0},
+        {"x": 1, "y": 2, "z": 0},
+        {"x": 2, "y": 2, "z": 0},
+        {"x": 3, "y": 2, "z": 0}
+      ]
+    },
+    {
+      "player": 1,
+      "tiles": [
+        {"x": 12, "y": 13, "z": 0},
+        {"x": 13, "y": 13, "z": 0},
+        {"x": 14, "y": 13, "z": 0},
+        {"x": 12, "y": 14, "z": 0},
+        {"x": 13, "y": 14, "z": 0},
+        {"x": 14, "y": 14, "z": 0}
+      ]
+    }
+  ]
+}

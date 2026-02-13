@@ -1,0 +1,58 @@
+{
+  "weapons": {
+    "rifle": {
+      "name": "Assault Rifle",
+      "damage_min": 3,
+      "damage_max": 5,
+      "range": 15,
+      "ammo": 4,
+      "crit_chance": 10,
+      "category": "primary"
+    },
+    "sniper_rifle": {
+      "name": "Sniper Rifle",
+      "damage_min": 5,
+      "damage_max": 8,
+      "range": 20,
+      "ammo": 3,
+      "crit_chance": 25,
+      "category": "primary"
+    },
+    "lmg": {
+      "name": "Light Machine Gun",
+      "damage_min": 4,
+      "damage_max": 7,
+      "range": 12,
+      "ammo": 6,
+      "crit_chance": 5,
+      "category": "primary"
+    },
+    "smg": {
+      "name": "Submachine Gun",
+      "damage_min": 2,
+      "damage_max": 4,
+      "range": 10,
+      "ammo": 5,
+      "crit_chance": 8,
+      "category": "primary"
+    },
+    "pistol": {
+      "name": "Pistol",
+      "damage_min": 1,
+      "damage_max": 3,
+      "range": 8,
+      "ammo": 6,
+      "crit_chance": 5,
+      "category": "secondary"
+    },
+    "shotgun": {
+      "name": "Shotgun",
+      "damage_min": 5,
+      "damage_max": 9,
+      "range": 6,
+      "ammo": 3,
+      "crit_chance": 15,
+      "category": "primary"
+    }
+  }
+}
