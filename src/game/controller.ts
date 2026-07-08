@@ -231,24 +231,30 @@ export class Controller {
     this.hud.setTooltip(clientX, clientY, null);
   }
 
-  onClick(pick: PickResult): void {
+  /** Left click (no drag): select own units. */
+  onSelect(pick: PickResult): void {
+    if (this.inputLocked || this.gameEnded) return;
+    if (pick.unitId === null) return;
+    const clicked = getUnit(this.state, pick.unitId);
+    if (clicked.player === this.state.currentPlayer) this.select(clicked.id);
+  }
+
+  /** Right click: contextual action — move, attack, throw, heal, door. */
+  onCommand(pick: PickResult): void {
     if (this.inputLocked || this.gameEnded) return;
     const u = this.selected;
+    if (!u) return;
 
-    // Selecting own units always works.
+    // Own units are action targets only for the medkit.
     if (pick.unitId !== null) {
       const clicked = getUnit(this.state, pick.unitId);
       if (clicked.player === this.state.currentPlayer) {
-        if (this.mode.t === 'medkit' && u && clicked.player === u.player) {
+        if (this.mode.t === 'medkit' && clicked.player === u.player) {
           this.issue({ kind: 'medkit', unitId: u.id, itemIndex: this.mode.itemIndex, targetId: clicked.id });
-          return;
         }
-        this.select(clicked.id);
         return;
       }
     }
-
-    if (!u) return;
 
     // Door toggling by direct click.
     if (pick.doorPos) {

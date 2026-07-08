@@ -58,6 +58,15 @@ export class CameraRig {
     this.target.z = THREE.MathUtils.clamp(this.target.z, this.bounds.min.z, this.bounds.max.z);
   }
 
+  /** Grab-the-world panning: the ground under the cursor follows a mouse drag of (dxPx, dyPx) pixels. */
+  dragPan(dxPx: number, dyPx: number): void {
+    // World units visible per vertical pixel at the target ≈ 2·dist·tan(FOV/2)/H;
+    // pan() scales its input by dist·0.018, so the distance cancels out.
+    const k = (2 * Math.tan(THREE.MathUtils.degToRad(FOV / 2))) / (0.018 * window.innerHeight);
+    // Vertical screen motion maps to ground-forward motion foreshortened by sin(pitch).
+    this.pan(-dxPx * k, (dyPx * k) / Math.sin(PITCH));
+  }
+
   centerOn(p: THREE.Vector3): void {
     this.target.copy(p).setY(0);
   }

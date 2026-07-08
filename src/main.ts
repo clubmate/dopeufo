@@ -95,18 +95,39 @@ function startGame(mapId: string, squadSize: number): void {
   // ---------------- input ----------------
   const keys = new Set<string>();
   let mouse = { x: 0, y: 0 };
+  // Left button: drag pans the camera; a click without movement selects.
+  let leftDrag: { lastX: number; lastY: number; startX: number; startY: number; moved: boolean } | null = null;
 
   const onMouseMove = (e: MouseEvent): void => {
     mouse = { x: e.clientX, y: e.clientY };
+    if (leftDrag && e.buttons & 1) {
+      const dx = e.clientX - leftDrag.lastX;
+      const dy = e.clientY - leftDrag.lastY;
+      leftDrag.lastX = e.clientX;
+      leftDrag.lastY = e.clientY;
+      if (Math.abs(e.clientX - leftDrag.startX) + Math.abs(e.clientY - leftDrag.startY) > 4) leftDrag.moved = true;
+      if (leftDrag.moved) {
+        rig.dragPan(dx, dy);
+        return;
+      }
+    }
     controller.onHover(picker.pick(e.clientX, e.clientY, units.pickables(), terrain.root), e.clientX, e.clientY);
   };
-  const onClick = (e: MouseEvent): void => {
-    if (e.button !== 0) return;
-    controller.onClick(picker.pick(e.clientX, e.clientY, units.pickables(), terrain.root));
+  const onMouseDown = (e: MouseEvent): void => {
+    if (e.button === 0) {
+      leftDrag = { lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
+    } else if (e.button === 2) {
+      controller.onCommand(picker.pick(e.clientX, e.clientY, units.pickables(), terrain.root));
+    }
+  };
+  const onMouseUp = (e: MouseEvent): void => {
+    if (e.button !== 0 || !leftDrag) return;
+    const wasDrag = leftDrag.moved;
+    leftDrag = null;
+    if (!wasDrag) controller.onSelect(picker.pick(e.clientX, e.clientY, units.pickables(), terrain.root));
   };
   const onContext = (e: MouseEvent): void => {
     e.preventDefault();
-    controller.cancelMode();
   };
   const onWheel = (e: WheelEvent): void => {
     rig.zoom(e.deltaY > 0 ? 1 : -1);
@@ -138,7 +159,8 @@ function startGame(mapId: string, squadSize: number): void {
   };
 
   canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mousedown', onClick);
+  canvas.addEventListener('mousedown', onMouseDown);
+  window.addEventListener('mouseup', onMouseUp);
   canvas.addEventListener('contextmenu', onContext);
   canvas.addEventListener('wheel', onWheel, { passive: true });
   window.addEventListener('keydown', onKeyDown);
@@ -180,7 +202,8 @@ function startGame(mapId: string, squadSize: number): void {
   teardown = () => {
     cancelAnimationFrame(raf);
     canvas.removeEventListener('mousemove', onMouseMove);
-    canvas.removeEventListener('mousedown', onClick);
+    canvas.removeEventListener('mousedown', onMouseDown);
+    window.removeEventListener('mouseup', onMouseUp);
     canvas.removeEventListener('contextmenu', onContext);
     canvas.removeEventListener('wheel', onWheel);
     window.removeEventListener('keydown', onKeyDown);

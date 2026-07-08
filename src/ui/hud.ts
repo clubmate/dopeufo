@@ -77,7 +77,7 @@ export class Hud {
     endBtn.innerHTML = `End Turn <span class="key">⏎</span>`;
     endBtn.onclick = () => this.handlers.onEndTurn();
     const hint = el('div', 'hint');
-    hint.textContent = 'Q/E rotate · WASD pan · scroll zoom · Tab next unit · Esc cancel';
+    hint.textContent = 'RMB move/act · LMB drag pan · Q/E rotate · scroll zoom · Tab next unit · Esc cancel';
     this.topright.append(turnbox, endBtn, hint);
 
     // --- soldier identity (bottom-left) + weapon (bottom-right) ---
