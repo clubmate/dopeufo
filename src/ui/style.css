@@ -283,6 +283,133 @@ body,
   text-transform: uppercase;
 }
 
+/* ---------- target chips (above ability bar) ---------- */
+.targetbar {
+  position: absolute;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.tchip {
+  width: 44px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 69, 69, 0.55);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px 3px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.tchip .face {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 69, 69, 0.25);
+  border: 1px solid var(--hp-foe);
+  color: var(--hp-foe);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 21px;
+  text-align: center;
+}
+
+.tchip .pct {
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+  color: var(--teal);
+}
+
+.tchip:hover {
+  border-color: var(--hp-foe);
+  background: rgba(255, 69, 69, 0.15);
+}
+
+.tchip.active {
+  border-color: var(--hp-foe);
+  background: rgba(255, 69, 69, 0.3);
+  box-shadow: 0 0 10px rgba(255, 69, 69, 0.5);
+}
+
+.tchip.blocked {
+  opacity: 0.45;
+}
+
+.tchip.blocked .pct {
+  color: var(--text-dim);
+}
+
+/* ---------- shot panel (targeting view) ---------- */
+.shotpanel {
+  position: absolute;
+  right: 14px;
+  bottom: 110px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 69, 69, 0.55);
+  padding: 10px 16px 12px;
+  min-width: 170px;
+  text-align: center;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+
+.shotpanel .tname {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--hp-foe);
+}
+
+.shotpanel .bigpct {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--teal);
+  line-height: 1.1;
+}
+
+.shotpanel .detail {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.shotpanel .firebtn {
+  margin-top: 8px;
+  width: 100%;
+  background: rgba(255, 69, 69, 0.2);
+  border: 1px solid var(--hp-foe);
+  color: #ffd9d4;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 7px 0;
+  cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+.shotpanel .firebtn:hover {
+  background: rgba(255, 69, 69, 0.4);
+}
+
+.shotpanel .firebtn .key {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.shotpanel .noshot {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--yellow-zone);
+}
+
 /* ---------- weapon panel (bottom-right) ---------- */
 .weaponpanel {
   position: absolute;

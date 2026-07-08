@@ -19,6 +19,11 @@ export class CameraRig {
   private zoomIndex = 2;
   private zoomCurrent = ZOOM_LEVELS[2];
   private bounds = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(24, 4, 24));
+  /** Over-the-shoulder targeting view (shooter → target, world coords); null = tactical view. */
+  private cine: { from: THREE.Vector3; to: THREE.Vector3 } | null = null;
+  private posCurrent = new THREE.Vector3();
+  private lookCurrent = new THREE.Vector3();
+  private initialized = false;
 
   constructor(aspect: number) {
     this.camera = new THREE.PerspectiveCamera(FOV, aspect, 0.5, 300);
@@ -71,6 +76,19 @@ export class CameraRig {
     this.target.copy(p).setY(0);
   }
 
+  /** Swing into the over-the-shoulder targeting view (positions in world coords, unit feet). */
+  enterTargetView(from: THREE.Vector3, to: THREE.Vector3): void {
+    this.cine = { from: from.clone(), to: to.clone() };
+  }
+
+  exitTargetView(): void {
+    this.cine = null;
+  }
+
+  get inTargetView(): boolean {
+    return this.cine !== null;
+  }
+
   setAspect(aspect: number): void {
     if (this.camera.aspect !== aspect) {
       this.camera.aspect = aspect;
@@ -85,13 +103,39 @@ export class CameraRig {
     this.zoomCurrent += (ZOOM_LEVELS[this.zoomIndex] - this.zoomCurrent) * lerp;
     this.setAspect(window.innerWidth / window.innerHeight);
 
-    const yaw = this.yawCurrent;
-    const offset = new THREE.Vector3(
-      Math.sin(yaw) * Math.cos(PITCH),
-      Math.sin(PITCH),
-      Math.cos(yaw) * Math.cos(PITCH),
-    ).multiplyScalar(this.zoomCurrent);
-    this.camera.position.copy(this.target).add(offset);
-    this.camera.lookAt(this.target);
+    let desiredPos: THREE.Vector3;
+    let desiredLook: THREE.Vector3;
+    let desiredFov: number;
+    if (this.cine) {
+      // Over the shooter's right shoulder, slightly above head height, aimed at the target's chest.
+      const { from, to } = this.cine;
+      const dir = to.clone().sub(from).setY(0).normalize();
+      const right = new THREE.Vector3(-dir.z, 0, dir.x);
+      desiredPos = from.clone().addScaledVector(dir, -1.4).addScaledVector(right, 0.55).add(new THREE.Vector3(0, 1.25, 0));
+      desiredLook = to.clone().add(new THREE.Vector3(0, 0.7, 0));
+      desiredFov = 30;
+    } else {
+      const yaw = this.yawCurrent;
+      const offset = new THREE.Vector3(
+        Math.sin(yaw) * Math.cos(PITCH),
+        Math.sin(PITCH),
+        Math.cos(yaw) * Math.cos(PITCH),
+      ).multiplyScalar(this.zoomCurrent);
+      desiredPos = this.target.clone().add(offset);
+      desiredLook = this.target.clone();
+      desiredFov = FOV;
+    }
+
+    // Smooth position/look/fov so every view change (target view, selection jumps) glides.
+    const glide = this.initialized ? 1 - Math.exp(-dt * 6) : 1;
+    this.initialized = true;
+    this.posCurrent.lerp(desiredPos, glide);
+    this.lookCurrent.lerp(desiredLook, glide);
+    if (Math.abs(desiredFov - this.camera.fov) > 0.01) {
+      this.camera.fov += (desiredFov - this.camera.fov) * glide;
+      this.camera.updateProjectionMatrix();
+    }
+    this.camera.position.copy(this.posCurrent);
+    this.camera.lookAt(this.lookCurrent);
   }
 }

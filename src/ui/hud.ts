@@ -10,9 +10,32 @@ export interface ActionButton {
   title?: string;
 }
 
+export interface TargetChip {
+  unitId: number;
+  name: string;
+  /** Hit chance in %, or null when the shot is currently impossible. */
+  chance: number | null;
+  active: boolean;
+  title: string;
+}
+
+export interface ShotPanel {
+  targetName: string;
+  ok: boolean;
+  reason?: string;
+  chance: number;
+  critChance: number;
+  coverText: string;
+  distance: number;
+  mode: string;
+  canFire: boolean;
+}
+
 export interface HudHandlers {
   onAction(id: string): void;
   onSelectUnit(unitId: number): void;
+  onSelectTarget(unitId: number): void;
+  onFire(): void;
   onEndTurn(): void;
 }
 
@@ -26,6 +49,8 @@ export class Hud {
   private topright: HTMLElement;
   private soldier: HTMLElement;
   private abilitybar: HTMLElement;
+  private targetbar: HTMLElement;
+  private shotpanel: HTMLElement;
   private weaponpanel: HTMLElement;
   private roster: HTMLElement;
   private tooltip: HTMLElement;
@@ -40,6 +65,8 @@ export class Hud {
     this.topright = el('div', 'topright');
     this.soldier = el('div', 'soldierpanel');
     this.abilitybar = el('div', 'abilitybar');
+    this.targetbar = el('div', 'targetbar');
+    this.shotpanel = el('div', 'shotpanel');
     this.weaponpanel = el('div', 'weaponpanel');
     this.roster = el('div', 'roster');
     this.tooltip = el('div', 'tooltip');
@@ -51,6 +78,8 @@ export class Hud {
       this.topright,
       this.soldier,
       this.abilitybar,
+      this.targetbar,
+      this.shotpanel,
       this.weaponpanel,
       this.roster,
       this.tooltip,
@@ -58,7 +87,14 @@ export class Hud {
     );
   }
 
-  refresh(state: GameState, viewer: PlayerId, selected: Unit | null, actions: ActionButton[]): void {
+  refresh(
+    state: GameState,
+    viewer: PlayerId,
+    selected: Unit | null,
+    actions: ActionButton[],
+    targets: TargetChip[] = [],
+    shot: ShotPanel | null = null,
+  ): void {
     const playerColor = state.currentPlayer === 1 ? 'var(--p1)' : 'var(--p2)';
 
     // --- objectives (top-left) ---
@@ -118,6 +154,42 @@ export class Hud {
       this.abilitybar.style.display = '';
     } else {
       this.abilitybar.style.display = 'none';
+    }
+
+    // --- target chips (bottom-center, above ability bar) ---
+    this.targetbar.innerHTML = '';
+    if (targets.length > 0) {
+      for (const t of targets) {
+        const b = document.createElement('button');
+        b.className = 'tchip' + (t.active ? ' active' : '') + (t.chance === null ? ' blocked' : '');
+        b.title = t.title;
+        b.innerHTML =
+          `<span class="face">${t.name.charAt(0)}</span>` +
+          `<span class="pct">${t.chance === null ? '—' : t.chance + '%'}</span>`;
+        b.onclick = () => this.handlers.onSelectTarget(t.unitId);
+        this.targetbar.append(b);
+      }
+      this.targetbar.style.display = '';
+    } else {
+      this.targetbar.style.display = 'none';
+    }
+
+    // --- shot panel (targeting view details) ---
+    if (shot) {
+      const fire = shot.canFire
+        ? `<button class="firebtn">Fire <span class="key">Space</span></button>`
+        : `<div class="noshot">${shot.reason ?? 'No shot'}</div>`;
+      this.shotpanel.innerHTML =
+        `<div class="tname">${shot.targetName}</div>` +
+        `<div class="bigpct">${shot.ok ? shot.chance + '%' : '—'}</div>` +
+        `<div class="detail">Crit ${shot.critChance}% · ${shot.coverText}</div>` +
+        `<div class="detail">${shot.mode} · ${shot.distance.toFixed(1)} tiles</div>` +
+        fire;
+      const btn = this.shotpanel.querySelector('.firebtn') as HTMLButtonElement | null;
+      if (btn) btn.onclick = () => this.handlers.onFire();
+      this.shotpanel.style.display = '';
+    } else {
+      this.shotpanel.style.display = 'none';
     }
 
     // --- roster (right edge) ---

@@ -72,6 +72,8 @@ function startGame(mapId: string, squadSize: number): void {
   const hud = new Hud(hudRoot, labelsRoot, {
     onAction: (id) => controller.onAction(id),
     onSelectUnit: (id) => controller.select(id),
+    onSelectTarget: (id) => controller.selectTarget(id),
+    onFire: () => controller.fire(),
     onEndTurn: () => controller.endTurn(),
   });
 
@@ -145,6 +147,7 @@ function startGame(mapId: string, squadSize: number): void {
       e.preventDefault();
       controller.cycleUnit(e.shiftKey ? -1 : 1);
     } else if (k === 'enter') controller.endTurn();
+    else if (k === ' ') controller.fire();
     else if (k === 'escape') controller.cancelMode();
     else if (k === 'pageup') controller.adjustLevelCap(1);
     else if (k === 'pagedown') controller.adjustLevelCap(-1);

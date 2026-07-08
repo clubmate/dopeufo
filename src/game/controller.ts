@@ -12,7 +12,7 @@ import { UnitRenderer } from '../render/units';
 import { TerrainRenderer } from '../render/terrain';
 import { OverlayRenderer } from '../render/overlays';
 import { Animator } from '../render/animation';
-import { Hud, ActionButton } from '../ui/hud';
+import { Hud, ActionButton, TargetChip, ShotPanel } from '../ui/hud';
 import { showHandoff, showVictory } from '../ui/screens';
 import { CameraRig } from '../camera/rig';
 import { PickResult } from '../input/picker';
@@ -72,6 +72,7 @@ export class Controller {
     if (u.player !== this.state.currentPlayer || !u.alive) return;
     this.selectedId = unitId;
     this.mode = { t: 'move' };
+    this.rig.exitTargetView();
     this.reach = u.ap > 0 ? computeReachable(this.state, u) : null;
     this.rig.centerOn(tileToWorld(u.pos.x, u.pos.y, u.pos.z));
     this.autoCutaway();
@@ -98,9 +99,35 @@ export class Controller {
 
   cancelMode(): void {
     this.mode = { t: 'move' };
+    this.rig.exitTargetView();
     this.overlays.showAoe(null, 0);
     this.overlays.showPath(null);
     this.refreshHud();
+  }
+
+  /** Enter the over-the-shoulder targeting view on a visible enemy (target chip click). */
+  selectTarget(enemyId: number): void {
+    if (this.inputLocked || this.gameEnded) return;
+    const u = this.selected;
+    if (!u) return;
+    const weapon = this.state.ruleset.weapons.get(u.weaponId)!;
+    if (weapon.explosive) return;
+    const target = getUnit(this.state, enemyId);
+    if (!target.alive || target.player === this.viewer || !this.state.vision[this.viewer].units.has(enemyId)) return;
+    const shot = this.mode.t === 'shoot' ? this.mode.shot : this.defaultShotMode(u);
+    this.mode = { t: 'shoot', shot, targetId: enemyId };
+    this.overlays.showPath(null);
+    this.overlays.showAoe(null, 0);
+    this.rig.enterTargetView(tileToWorld(u.pos.x, u.pos.y, u.pos.z), tileToWorld(target.pos.x, target.pos.y, target.pos.z));
+    this.refreshHud();
+  }
+
+  /** Fire at the locked target (FIRE button / Space). */
+  fire(): void {
+    if (this.inputLocked || this.gameEnded) return;
+    const u = this.selected;
+    if (!u || this.mode.t !== 'shoot' || this.mode.targetId === null) return;
+    this.issue({ kind: 'shoot', unitId: u.id, targetId: this.mode.targetId, mode: this.mode.shot });
   }
 
   // ---------------- actions from HUD ----------------
@@ -115,10 +142,12 @@ export class Controller {
       if (weapon.explosive) {
         this.mode = { t: 'aoe' };
       } else {
-        this.mode = { t: 'shoot', shot: id, targetId: null };
+        // Switching shot mode keeps a locked target (and the targeting view).
+        this.mode = { t: 'shoot', shot: id, targetId: this.mode.t === 'shoot' ? this.mode.targetId : null };
       }
     } else if (id === 'melee') {
       this.mode = { t: 'melee' };
+      this.rig.exitTargetView();
     } else if (id === 'reload') {
       this.issue({ kind: 'reload', unitId: u.id });
       return;
@@ -129,6 +158,7 @@ export class Controller {
       this.issue({ kind: 'hunker', unitId: u.id });
       return;
     } else if (id.startsWith('item')) {
+      this.rig.exitTargetView();
       const itemIndex = parseInt(id.slice(4), 10);
       const item = this.state.ruleset.items.get(u.items[itemIndex]);
       if (!item) return;
@@ -328,6 +358,7 @@ export class Controller {
 
   private afterEvents(): void {
     this.inputLocked = false;
+    this.rig.exitTargetView();
     if (this.gameEnded) return;
     const u = this.selected;
     if (!u || u.player !== this.state.currentPlayer) this.selectFirstUnit();
@@ -427,7 +458,52 @@ export class Controller {
   }
 
   refreshHud(): void {
-    this.hud.refresh(this.state, this.viewer, this.selected, this.buildActions());
+    this.hud.refresh(this.state, this.viewer, this.selected, this.buildActions(), this.buildTargets(), this.buildShotPanel());
+  }
+
+  /** One chip per visible enemy of the selected unit, best hit chance first. */
+  private buildTargets(): TargetChip[] {
+    const u = this.selected;
+    if (!u) return [];
+    const weapon = this.state.ruleset.weapons.get(u.weaponId)!;
+    if (weapon.explosive) return [];
+    const mode = this.mode.t === 'shoot' ? this.mode.shot : this.defaultShotMode(u);
+    const vision = this.state.vision[this.viewer];
+    const out: TargetChip[] = [];
+    for (const e of this.state.units) {
+      if (!e.alive || e.player === this.viewer || !vision.units.has(e.id)) continue;
+      const prev = computeShot(this.state, u, e, weapon, mode, false);
+      out.push({
+        unitId: e.id,
+        name: e.name,
+        chance: prev.ok ? prev.chance : null,
+        active: this.mode.t === 'shoot' && this.mode.targetId === e.id,
+        title: prev.ok ? `${e.name} — ${prev.chance}% to hit (${mode})` : `${e.name} — ${prev.reason}`,
+      });
+    }
+    out.sort((a, b) => (b.chance ?? -1) - (a.chance ?? -1));
+    return out;
+  }
+
+  /** Shot details for the targeting view; null while no target is locked. */
+  private buildShotPanel(): ShotPanel | null {
+    const u = this.selected;
+    if (!u || this.mode.t !== 'shoot' || this.mode.targetId === null) return null;
+    const target = getUnit(this.state, this.mode.targetId);
+    if (!target.alive) return null;
+    const weapon = this.state.ruleset.weapons.get(u.weaponId)!;
+    const prev = computeShot(this.state, u, target, weapon, this.mode.shot, false);
+    return {
+      targetName: target.name,
+      ok: prev.ok,
+      reason: prev.reason,
+      chance: prev.chance,
+      critChance: prev.critChance,
+      coverText: prev.flanked ? 'Flanked!' : prev.cover === CoverType.Full ? 'Full cover' : prev.cover === CoverType.Half ? 'Half cover' : 'No cover',
+      distance: prev.distance,
+      mode: this.mode.shot,
+      canFire: prev.ok,
+    };
   }
 
   private buildActions(): ActionButton[] {
