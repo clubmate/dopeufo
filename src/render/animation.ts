@@ -85,6 +85,7 @@ export class Animator {
       case 'shot': {
         const shooter = getUnit(this.state, ev.shooterId);
         const target = getUnit(this.state, ev.targetId);
+        this.units.mesh(ev.shooterId).rotation.y = Math.atan2(target.pos.x - shooter.pos.x, target.pos.y - shooter.pos.y);
         const from = tileToWorld(shooter.pos.x, shooter.pos.y, shooter.pos.z).add(new THREE.Vector3(0, 0.55, 0));
         const to = tileToWorld(target.pos.x, target.pos.y, target.pos.z).add(new THREE.Vector3(0, 0.5, 0));
         if (!ev.hit) to.add(new THREE.Vector3((Math.random() - 0.5) * 1.4, 0.3, (Math.random() - 0.5) * 1.4));

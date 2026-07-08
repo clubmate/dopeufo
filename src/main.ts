@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { newGame, MAPS } from './core/setup';
 import { updateVision } from './core/fog/visibility';
-import { createScene, centerLighting, SceneCtx } from './render/scene';
+import { createScene, createLights, centerLighting, SceneCtx } from './render/scene';
 import { TerrainRenderer } from './render/terrain';
 import { UnitRenderer } from './render/units';
 import { OverlayRenderer } from './render/overlays';
@@ -38,8 +38,7 @@ function startGame(mapId: string, squadSize: number): void {
   const scene = ctx.scene;
   scene.clear();
   // Re-add lights (scene.clear removed them).
-  const fresh = createSceneLights();
-  fresh.forEach((l) => scene.add(l));
+  createLights().forEach((l) => scene.add(l));
   centerLighting(ctx, state.map.w, state.map.h);
 
   const rig = new CameraRig(window.innerWidth / window.innerHeight);
@@ -217,21 +216,6 @@ function startGame(mapId: string, squadSize: number): void {
     scene.clear();
     teardown = null;
   };
-}
-
-function createSceneLights(): THREE.Object3D[] {
-  const ambient = new THREE.AmbientLight(0x8899bb, 0.75);
-  const sun = new THREE.DirectionalLight(0xfff2dd, 1.6);
-  sun.position.set(30, 45, 18);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -30;
-  sun.shadow.camera.right = 30;
-  sun.shadow.camera.top = 30;
-  sun.shadow.camera.bottom = -30;
-  sun.shadow.camera.far = 120;
-  sun.shadow.bias = -0.0004;
-  return [ambient, sun, sun.target];
 }
 
 mainMenu();

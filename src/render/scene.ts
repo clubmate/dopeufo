@@ -20,15 +20,26 @@ export function createScene(canvas: HTMLCanvasElement): SceneCtx {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x11151d);
-  scene.fog = new THREE.Fog(0x11151d, 60, 140);
+  scene.background = new THREE.Color(0x0b0e14);
+  scene.fog = new THREE.Fog(0x0b0e14, 45, 120);
 
-  const ambient = new THREE.AmbientLight(0x8899bb, 0.75);
-  scene.add(ambient);
+  createLights().forEach((l) => scene.add(l));
 
-  const sun = new THREE.DirectionalLight(0xfff2dd, 1.6);
+  return { renderer, scene, canvas };
+}
+
+/**
+ * Night-mission lighting: cool hemisphere base, a warm moon/flood key light
+ * with shadows, and a cold rim fill from the opposite side.
+ */
+export function createLights(): THREE.Object3D[] {
+  const hemi = new THREE.HemisphereLight(0x3d4c6e, 0x12141a, 1.2);
+
+  const sun = new THREE.DirectionalLight(0xffe3c0, 2.4);
   sun.position.set(30, 45, 18);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -38,10 +49,12 @@ export function createScene(canvas: HTMLCanvasElement): SceneCtx {
   sun.shadow.camera.bottom = -30;
   sun.shadow.camera.far = 120;
   sun.shadow.bias = -0.0004;
-  scene.add(sun);
-  scene.add(sun.target);
+  sun.shadow.radius = 3;
 
-  return { renderer, scene, canvas };
+  const rim = new THREE.DirectionalLight(0x4a6a9a, 0.7);
+  rim.position.set(-25, 30, -20);
+
+  return [hemi, sun, sun.target, rim];
 }
 
 /** Keeps the shadow camera centered on the map. */

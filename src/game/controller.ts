@@ -119,6 +119,9 @@ export class Controller {
     this.overlays.showPath(null);
     this.overlays.showAoe(null, 0);
     this.rig.enterTargetView(tileToWorld(u.pos.x, u.pos.y, u.pos.z), tileToWorld(target.pos.x, target.pos.y, target.pos.z));
+    // Presentation only: shooter and target square off.
+    this.units.mesh(u.id).rotation.y = Math.atan2(target.pos.x - u.pos.x, target.pos.y - u.pos.y);
+    this.units.mesh(target.id).rotation.y = Math.atan2(u.pos.x - target.pos.x, u.pos.y - target.pos.y);
     this.refreshHud();
   }
 
