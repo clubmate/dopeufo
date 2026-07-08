@@ -16,10 +16,17 @@ export interface HudHandlers {
   onEndTurn(): void;
 }
 
-/** DOM-based HUD overlay: top bar, unit action panel, squad roster, tooltip, combat floaters. */
+/**
+ * DOM-based HUD overlay, laid out on the XCOM 2 grid: objectives top-left,
+ * turn/end-turn top-right, soldier identity bottom-left, ability bar
+ * bottom-center, weapon panel bottom-right, squad roster on the right edge.
+ */
 export class Hud {
-  private topbar: HTMLElement;
-  private unitpanel: HTMLElement;
+  private objectives: HTMLElement;
+  private topright: HTMLElement;
+  private soldier: HTMLElement;
+  private abilitybar: HTMLElement;
+  private weaponpanel: HTMLElement;
   private roster: HTMLElement;
   private tooltip: HTMLElement;
   private logline: HTMLElement;
@@ -29,62 +36,91 @@ export class Hud {
     private labelsRoot: HTMLElement,
     private handlers: HudHandlers,
   ) {
-    this.topbar = el('div', 'topbar');
-    this.unitpanel = el('div', 'unitpanel');
+    this.objectives = el('div', 'objectives');
+    this.topright = el('div', 'topright');
+    this.soldier = el('div', 'soldierpanel');
+    this.abilitybar = el('div', 'abilitybar');
+    this.weaponpanel = el('div', 'weaponpanel');
     this.roster = el('div', 'roster');
     this.tooltip = el('div', 'tooltip');
     this.tooltip.style.display = 'none';
     this.logline = el('div', 'logline');
     this.logline.style.display = 'none';
-    hudRoot.append(this.topbar, this.unitpanel, this.roster, this.tooltip, this.logline);
+    hudRoot.append(
+      this.objectives,
+      this.topright,
+      this.soldier,
+      this.abilitybar,
+      this.weaponpanel,
+      this.roster,
+      this.tooltip,
+      this.logline,
+    );
   }
 
   refresh(state: GameState, viewer: PlayerId, selected: Unit | null, actions: ActionButton[]): void {
-    // --- top bar ---
-    this.topbar.innerHTML = '';
-    const chip = el('span', 'player-chip');
-    chip.textContent = `Player ${state.currentPlayer}`;
-    chip.style.background = state.currentPlayer === 1 ? 'var(--p1)' : 'var(--p2)';
-    const turn = el('span');
-    turn.textContent = `Turn ${state.turn}`;
+    const playerColor = state.currentPlayer === 1 ? 'var(--p1)' : 'var(--p2)';
+
+    // --- objectives (top-left) ---
+    this.objectives.innerHTML =
+      `<div class="head">◈ Objectives</div>` +
+      `<div class="goal"><span class="tick"></span>Neutralize all enemy targets</div>`;
+
+    // --- turn block (top-right) ---
+    this.topright.innerHTML = '';
+    const turnbox = el('div', 'turnbox');
+    turnbox.innerHTML =
+      `<div class="turnnum">Turn ${state.turn}</div>` +
+      `<div class="player" style="color:${playerColor}">Player ${state.currentPlayer}</div>`;
     const endBtn = document.createElement('button');
-    endBtn.className = 'abtn';
+    endBtn.className = 'endturn';
     endBtn.innerHTML = `End Turn <span class="key">⏎</span>`;
     endBtn.onclick = () => this.handlers.onEndTurn();
-    const hint = el('span', 'hint');
+    const hint = el('div', 'hint');
     hint.textContent = 'Q/E rotate · WASD pan · scroll zoom · Tab next unit · Esc cancel';
-    this.topbar.append(chip, turn, endBtn, hint);
+    this.topright.append(turnbox, endBtn, hint);
 
-    // --- unit panel ---
-    this.unitpanel.innerHTML = '';
+    // --- soldier identity (bottom-left) + weapon (bottom-right) ---
     if (selected) {
       const cls = state.ruleset.classes.get(selected.classId)!;
       const weapon = state.ruleset.weapons.get(selected.weaponId)!;
-      const who = el('div', 'who');
-      who.innerHTML =
-        `<span class="name">${selected.name}</span>` +
-        `<span class="stat">${cls.name}</span>` +
-        `<span class="stat">HP <b>${selected.hp}/${selected.maxHp}</b></span>` +
-        `<span class="stat">AP <b>${selected.ap}</b></span>` +
-        `<span class="stat">${weapon.name} <b>${selected.ammo}/${weapon.clip}</b></span>` +
-        `<span class="stat">Aim <b>${selected.aim}</b></span>`;
-      const bar = el('div', 'actions');
-      for (const a of actions) {
-        const b = document.createElement('button');
-        b.className = 'abtn' + (a.active ? ' active' : '');
-        b.disabled = !a.enabled;
-        if (a.title) b.title = a.title;
-        b.innerHTML = `${a.label} <span class="ap">${a.apCost}</span><span class="key">${a.hotkey}</span>`;
-        b.onclick = () => this.handlers.onAction(a.id);
-        bar.append(b);
-      }
-      this.unitpanel.append(who, bar);
-      this.unitpanel.style.display = '';
+      this.soldier.innerHTML =
+        `<div class="cls" style="color:${cls.color}">▸ ${cls.name}</div>` +
+        `<div class="name">${selected.name}</div>` +
+        `<div class="row">HP ${hpPips(selected.hp, selected.maxHp, true)}</div>` +
+        `<div class="row">AP <span class="appips">${'◆'.repeat(selected.ap)}${'◇'.repeat(Math.max(0, 2 - selected.ap))}</span>` +
+        `<span class="sub">Aim ${selected.aim}</span></div>`;
+      this.weaponpanel.innerHTML =
+        `<div class="wname">${weapon.name}</div>` +
+        `<div class="ammo">${ammoPips(selected.ammo, weapon.clip)}</div>`;
+      this.soldier.style.display = '';
+      this.weaponpanel.style.display = '';
     } else {
-      this.unitpanel.style.display = 'none';
+      this.soldier.style.display = 'none';
+      this.weaponpanel.style.display = 'none';
     }
 
-    // --- roster ---
+    // --- ability bar (bottom-center) ---
+    this.abilitybar.innerHTML = '';
+    if (selected && actions.length > 0) {
+      for (const a of actions) {
+        const b = document.createElement('button');
+        b.className = 'ability' + (a.active ? ' active' : '');
+        b.disabled = !a.enabled;
+        b.title = (a.title ? a.title + ' — ' : '') + a.apCost;
+        b.innerHTML =
+          `<span class="ap">${a.apCost.replace(' AP', '')}</span>` +
+          `<span class="lbl">${a.label}</span>` +
+          `<span class="key">${a.hotkey}</span>`;
+        b.onclick = () => this.handlers.onAction(a.id);
+        this.abilitybar.append(b);
+      }
+      this.abilitybar.style.display = '';
+    } else {
+      this.abilitybar.style.display = 'none';
+    }
+
+    // --- roster (right edge) ---
     this.roster.innerHTML = '';
     for (const u of livingUnits(state, viewer)) {
       const cls = state.ruleset.classes.get(u.classId)!;
@@ -93,8 +129,8 @@ export class Hud {
       const status = u.overwatch ? ' ⏿' : u.hunkered ? ' ⛨' : '';
       b.innerHTML =
         `<b>${u.name}</b> <span style="color:${cls.color}">${cls.name}</span>${status}` +
-        ` <span style="float:right">${'●'.repeat(u.ap)}${'○'.repeat(Math.max(0, 2 - u.ap))}</span>` +
-        `<div class="hpbar"><div style="width:${(u.hp / u.maxHp) * 100}%"></div></div>`;
+        ` <span style="float:right">${'◆'.repeat(u.ap)}${'◇'.repeat(Math.max(0, 2 - u.ap))}</span>` +
+        `<div class="hprow">${hpPips(u.hp, u.maxHp, true)}</div>`;
       b.onclick = () => this.handlers.onSelectUnit(u.id);
       this.roster.append(b);
     }
@@ -151,9 +187,10 @@ export class Hud {
       const s = project(u.pos.x + 0.5, u.pos.z + 1.25, u.pos.y + 0.5);
       if (!s) continue;
       const label = el('div', 'unitlabel');
-      const pips = Array.from({ length: u.maxHp }, (_, i) => `<span class="pip${i < u.hp ? '' : ' empty'}"></span>`).join('');
       const status = u.overwatch ? '<div class="status">OVERWATCH</div>' : u.hunkered ? '<div class="status">HUNKER</div>' : '';
-      label.innerHTML = `<div style="color:${u.player === 1 ? 'var(--p1)' : 'var(--p2)'}">${u.name}</div><div class="pips">${pips}</div>${status}`;
+      label.innerHTML =
+        `<div style="color:${u.player === 1 ? 'var(--p1)' : 'var(--p2)'}">${u.name}</div>` +
+        `${hpPips(u.hp, u.maxHp, mine)}${status}`;
       label.style.left = `${s.x}px`;
       label.style.top = `${s.y}px`;
       this.labelsRoot.append(label);
@@ -175,4 +212,18 @@ function el(tag: string, className?: string): HTMLElement {
   const e = document.createElement(tag);
   if (className) e.className = className;
   return e;
+}
+
+/** XCOM-style segmented HP bar: one pip per hit point, green for friendlies, red for enemies. */
+function hpPips(hp: number, maxHp: number, friendly: boolean): string {
+  const tone = friendly ? '' : ' foe';
+  return `<span class="pips">${Array.from(
+    { length: maxHp },
+    (_, i) => `<span class="pip${tone}${i < hp ? '' : ' empty'}"></span>`,
+  ).join('')}</span>`;
+}
+
+/** Ammo pips: one segment per round in the clip. */
+function ammoPips(ammo: number, clip: number): string {
+  return Array.from({ length: clip }, (_, i) => `<span class="apip${i < ammo ? '' : ' empty'}"></span>`).join('');
 }

@@ -1,16 +1,18 @@
 import * as THREE from 'three';
 
-const PITCH = Math.atan(1 / Math.SQRT2); // classic isometric elevation (~35.26°)
-const ZOOM_LEVELS = [5, 7.5, 11, 16, 22];
-const CAM_DIST = 60;
+const PITCH = THREE.MathUtils.degToRad(50); // elevated XCOM-2-style view
+const FOV = 40;
+// Camera distance per zoom step; with FOV 40° these roughly match the old ortho framing.
+const ZOOM_LEVELS = [14, 20, 30, 44, 60];
 
 /**
- * Isometric orthographic camera rig: four 90° yaw stops with smooth slerp
+ * XCOM-2-style perspective camera rig: four 90° yaw stops with smooth slerp
  * between them, keyboard/edge panning in camera-relative directions, and
- * stepped zoom (smoothed). The rig looks at a target point on the ground.
+ * stepped zoom (smoothed, via camera distance). The rig looks at a target
+ * point on the ground.
  */
 export class CameraRig {
-  readonly camera: THREE.OrthographicCamera;
+  readonly camera: THREE.PerspectiveCamera;
   target = new THREE.Vector3();
   private yawIndex = 0;
   private yawCurrent = Math.PI / 4;
@@ -19,8 +21,7 @@ export class CameraRig {
   private bounds = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(24, 4, 24));
 
   constructor(aspect: number) {
-    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 300);
-    this.setAspect(aspect);
+    this.camera = new THREE.PerspectiveCamera(FOV, aspect, 0.5, 300);
     this.update(0);
   }
 
@@ -48,7 +49,7 @@ export class CameraRig {
 
   /** Pan in camera-relative screen directions (dx=right, dy=up on screen). */
   pan(dx: number, dy: number): void {
-    const speed = this.zoomCurrent * 0.05;
+    const speed = this.zoomCurrent * 0.018;
     const yaw = this.yawCurrent;
     const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
     const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
@@ -62,12 +63,10 @@ export class CameraRig {
   }
 
   setAspect(aspect: number): void {
-    const h = this.zoomCurrent;
-    this.camera.left = -h * aspect;
-    this.camera.right = h * aspect;
-    this.camera.top = h;
-    this.camera.bottom = -h;
-    this.camera.updateProjectionMatrix();
+    if (this.camera.aspect !== aspect) {
+      this.camera.aspect = aspect;
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   /** Advance smoothing and place the camera. Call once per frame. */
@@ -82,7 +81,7 @@ export class CameraRig {
       Math.sin(yaw) * Math.cos(PITCH),
       Math.sin(PITCH),
       Math.cos(yaw) * Math.cos(PITCH),
-    ).multiplyScalar(CAM_DIST);
+    ).multiplyScalar(this.zoomCurrent);
     this.camera.position.copy(this.target).add(offset);
     this.camera.lookAt(this.target);
   }
