@@ -1,0 +1,19 @@
+{
+  "name": "Standard PvP",
+  "squadSize": 6,
+  "squad": ["sniper", "assault", "ranger", "grenadier", "support", "assault"],
+  "constants": {
+    "apPerTurn": 2,
+    "halfCoverDefense": 20,
+    "fullCoverDefense": 40,
+    "hunkerMultiplier": 2,
+    "heightAimBonus": 10,
+    "overwatchAimMalus": 25,
+    "flankCritBonus": 25,
+    "smokeDefense": 20,
+    "minHitChance": 1,
+    "maxHitChance": 99,
+    "fallDamagePerLevel": 2,
+    "critMultiplier": 1.5
+  }
+}

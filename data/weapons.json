@@ -1,0 +1,55 @@
+[
+  {
+    "id": "assault_rifle",
+    "name": "Assault Rifle",
+    "curve": "rifle",
+    "damage": [3, 5],
+    "critChance": 10,
+    "clip": 4,
+    "range": 20,
+    "modes": {
+      "snap": { "apCost": 1, "endsTurn": false, "aimMod": 0, "critMod": 0, "shots": 1 },
+      "aimed": { "apCost": 2, "endsTurn": true, "aimMod": 15, "critMod": 15, "shots": 1 },
+      "auto": { "apCost": 2, "endsTurn": true, "aimMod": -20, "critMod": 0, "shots": 3 }
+    }
+  },
+  {
+    "id": "sniper_rifle",
+    "name": "Sniper Rifle",
+    "curve": "sniper",
+    "damage": [4, 6],
+    "critChance": 20,
+    "clip": 3,
+    "range": 30,
+    "modes": {
+      "snap": { "apCost": 1, "endsTurn": false, "aimMod": -15, "critMod": 0, "shots": 1 },
+      "aimed": { "apCost": 2, "endsTurn": true, "aimMod": 10, "critMod": 15, "shots": 1 }
+    }
+  },
+  {
+    "id": "shotgun",
+    "name": "Shotgun",
+    "curve": "shotgun",
+    "damage": [4, 6],
+    "critChance": 15,
+    "clip": 4,
+    "range": 14,
+    "modes": {
+      "snap": { "apCost": 1, "endsTurn": false, "aimMod": 0, "critMod": 0, "shots": 1 },
+      "auto": { "apCost": 2, "endsTurn": true, "aimMod": -15, "critMod": 0, "shots": 2 }
+    }
+  },
+  {
+    "id": "grenade_launcher",
+    "name": "Grenade Launcher",
+    "curve": "launcher",
+    "damage": [3, 4],
+    "critChance": 0,
+    "clip": 2,
+    "range": 12,
+    "explosive": { "radius": 2.0 },
+    "modes": {
+      "snap": { "apCost": 1, "endsTurn": true, "aimMod": 0, "critMod": 0, "shots": 1 }
+    }
+  }
+]

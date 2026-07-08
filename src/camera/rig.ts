@@ -1,0 +1,89 @@
+import * as THREE from 'three';
+
+const PITCH = Math.atan(1 / Math.SQRT2); // classic isometric elevation (~35.26°)
+const ZOOM_LEVELS = [5, 7.5, 11, 16, 22];
+const CAM_DIST = 60;
+
+/**
+ * Isometric orthographic camera rig: four 90° yaw stops with smooth slerp
+ * between them, keyboard/edge panning in camera-relative directions, and
+ * stepped zoom (smoothed). The rig looks at a target point on the ground.
+ */
+export class CameraRig {
+  readonly camera: THREE.OrthographicCamera;
+  target = new THREE.Vector3();
+  private yawIndex = 0;
+  private yawCurrent = Math.PI / 4;
+  private zoomIndex = 2;
+  private zoomCurrent = ZOOM_LEVELS[2];
+  private bounds = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(24, 4, 24));
+
+  constructor(aspect: number) {
+    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 300);
+    this.setAspect(aspect);
+    this.update(0);
+  }
+
+  setMapBounds(w: number, h: number): void {
+    this.bounds = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(w, 0, h));
+    this.target.set(w / 2, 0, h / 2);
+  }
+
+  get yawTarget(): number {
+    return Math.PI / 4 + (this.yawIndex * Math.PI) / 2;
+  }
+
+  /** Rotate one 90° stop. dir=+1 counter-clockwise. */
+  rotate(dir: 1 | -1): void {
+    this.yawIndex = (this.yawIndex + dir + 4) % 4;
+    // Keep the interpolant within half a turn so we always take the short way.
+    const t = this.yawTarget;
+    while (this.yawCurrent - t > Math.PI) this.yawCurrent -= Math.PI * 2;
+    while (t - this.yawCurrent > Math.PI) this.yawCurrent += Math.PI * 2;
+  }
+
+  zoom(dir: 1 | -1): void {
+    this.zoomIndex = Math.min(ZOOM_LEVELS.length - 1, Math.max(0, this.zoomIndex + dir));
+  }
+
+  /** Pan in camera-relative screen directions (dx=right, dy=up on screen). */
+  pan(dx: number, dy: number): void {
+    const speed = this.zoomCurrent * 0.05;
+    const yaw = this.yawCurrent;
+    const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+    this.target.addScaledVector(right, dx * speed).addScaledVector(fwd, dy * speed);
+    this.target.x = THREE.MathUtils.clamp(this.target.x, this.bounds.min.x, this.bounds.max.x);
+    this.target.z = THREE.MathUtils.clamp(this.target.z, this.bounds.min.z, this.bounds.max.z);
+  }
+
+  centerOn(p: THREE.Vector3): void {
+    this.target.copy(p).setY(0);
+  }
+
+  setAspect(aspect: number): void {
+    const h = this.zoomCurrent;
+    this.camera.left = -h * aspect;
+    this.camera.right = h * aspect;
+    this.camera.top = h;
+    this.camera.bottom = -h;
+    this.camera.updateProjectionMatrix();
+  }
+
+  /** Advance smoothing and place the camera. Call once per frame. */
+  update(dt: number): void {
+    const lerp = 1 - Math.exp(-dt * 10);
+    this.yawCurrent += (this.yawTarget - this.yawCurrent) * lerp;
+    this.zoomCurrent += (ZOOM_LEVELS[this.zoomIndex] - this.zoomCurrent) * lerp;
+    this.setAspect(window.innerWidth / window.innerHeight);
+
+    const yaw = this.yawCurrent;
+    const offset = new THREE.Vector3(
+      Math.sin(yaw) * Math.cos(PITCH),
+      Math.sin(PITCH),
+      Math.cos(yaw) * Math.cos(PITCH),
+    ).multiplyScalar(CAM_DIST);
+    this.camera.position.copy(this.target).add(offset);
+    this.camera.lookAt(this.target);
+  }
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "frag",
+    "name": "Frag Grenade",
+    "type": "grenade",
+    "apCost": 1,
+    "endsTurn": true,
+    "range": 8,
+    "radius": 2.5,
+    "damage": [3, 4]
+  },
+  {
+    "id": "smoke",
+    "name": "Smoke Grenade",
+    "type": "smoke",
+    "apCost": 1,
+    "endsTurn": false,
+    "range": 9,
+    "radius": 2.5,
+    "duration": 2
+  },
+  {
+    "id": "medkit",
+    "name": "Medkit",
+    "type": "medkit",
+    "apCost": 1,
+    "endsTurn": false,
+    "range": 1,
+    "heal": 4
+  }
+]

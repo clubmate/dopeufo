@@ -1,0 +1,58 @@
+[
+  {
+    "id": "sniper",
+    "name": "Sniper",
+    "hp": 6,
+    "aim": 80,
+    "mobility": 6,
+    "sight": 15,
+    "weapon": "sniper_rifle",
+    "items": ["frag"],
+    "color": "#7ec8e3"
+  },
+  {
+    "id": "assault",
+    "name": "Assault",
+    "hp": 8,
+    "aim": 72,
+    "mobility": 9,
+    "sight": 14,
+    "weapon": "assault_rifle",
+    "items": ["frag", "frag"],
+    "color": "#e3a35b"
+  },
+  {
+    "id": "ranger",
+    "name": "Ranger",
+    "hp": 9,
+    "aim": 70,
+    "mobility": 10,
+    "sight": 14,
+    "weapon": "shotgun",
+    "melee": { "damage": [5, 7], "apCost": 1, "endsTurn": true, "aimBonus": 25 },
+    "items": ["frag"],
+    "color": "#9be36b"
+  },
+  {
+    "id": "grenadier",
+    "name": "Grenadier",
+    "hp": 8,
+    "aim": 68,
+    "mobility": 7,
+    "sight": 14,
+    "weapon": "grenade_launcher",
+    "items": ["frag", "smoke"],
+    "color": "#e36b6b"
+  },
+  {
+    "id": "support",
+    "name": "Support",
+    "hp": 7,
+    "aim": 72,
+    "mobility": 8,
+    "sight": 14,
+    "weapon": "assault_rifle",
+    "items": ["medkit", "medkit", "smoke"],
+    "color": "#c89be3"
+  }
+]
