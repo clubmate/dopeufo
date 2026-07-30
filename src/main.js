@@ -23,16 +23,21 @@ function fatal(err) {
  * and units draw from; game needs the world's tile data; input and ui need game.
  * A subsystem that fails is logged and skipped so the rest still runs — a broken
  * audio module must never cost us the frame.
+ *
+ * Each entry carries its own import() with a literal specifier. A single
+ * import(variable) would be shorter, but Vite can only follow literals — with a
+ * variable it emits nothing, and a production build boots into eight "degraded"
+ * modules while dev (native ESM, no bundling) looks perfectly fine.
  */
 const MODULES = [
-  { name: 'render', path: './render/index.js', label: 'lighting & atmosphere' },
-  { name: 'world', path: './world/index.js', label: 'generating battlefield' },
-  { name: 'units', path: './units/index.js', label: 'deploying squads' },
-  { name: 'fx', path: './fx/index.js', label: 'effects' },
-  { name: 'audio', path: './audio/index.js', label: 'audio' },
-  { name: 'game', path: './game/index.js', label: 'tactical systems' },
-  { name: 'input', path: './input/index.js', label: 'camera & input' },
-  { name: 'ui', path: './ui/index.js', label: 'interface' },
+  { name: 'render', path: './render/index.js', label: 'lighting & atmosphere', load: () => import('./render/index.js') },
+  { name: 'world', path: './world/index.js', label: 'generating battlefield', load: () => import('./world/index.js') },
+  { name: 'units', path: './units/index.js', label: 'deploying squads', load: () => import('./units/index.js') },
+  { name: 'fx', path: './fx/index.js', label: 'effects', load: () => import('./fx/index.js') },
+  { name: 'audio', path: './audio/index.js', label: 'audio', load: () => import('./audio/index.js') },
+  { name: 'game', path: './game/index.js', label: 'tactical systems', load: () => import('./game/index.js') },
+  { name: 'input', path: './input/index.js', label: 'camera & input', load: () => import('./input/index.js') },
+  { name: 'ui', path: './ui/index.js', label: 'interface', load: () => import('./ui/index.js') },
 ]
 
 async function boot() {
@@ -56,7 +61,7 @@ async function boot() {
     const m = MODULES[i]
     progress(5 + (i / MODULES.length) * 90, m.label)
     try {
-      const mod = await import(/* @vite-ignore */ m.path)
+      const mod = await m.load()
       if (typeof mod.init !== 'function') {
         throw new Error(`${m.path} does not export init(ctx)`)
       }

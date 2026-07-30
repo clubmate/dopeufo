@@ -30,7 +30,16 @@ import { createTextureFactory } from './textures.js'
  * of screen-space GTAO it is what turns shadow interiors into mush.
  */
 
-const MANIFEST_URL = '/textures/render/manifest.json'
+// Deploys can live under a subpath (GitHub Pages serves this at /dopeufo/), so
+// texture URLs are built off Vite's BASE_URL rather than the site root. Same
+// idiom as units/soldier.js url().
+// Written plainly on purpose: Vite substitutes the literal text
+// `import.meta.env.BASE_URL` at build time. Guarding it with `?.` defeats that
+// — the expression survives into the bundle, import.meta.env is undefined in a
+// plain browser, and every asset silently falls back to the site root.
+const BASE_URL = import.meta.env.BASE_URL || '/'
+const TEX_BASE = `${BASE_URL}textures/render/`.replace(/([^:])\/\//g, '$1/')
+const MANIFEST_URL = `${TEX_BASE}manifest.json`
 const SCAN_TIMEOUT_MS = 9000
 
 /**
@@ -228,7 +237,7 @@ export async function createMaterials(ctx) {
   }
 
   function loadScanTex(file, srgb) {
-    const url = `/textures/render/${file}`
+    const url = `${TEX_BASE}${file}`
     if (scanCache.has(url)) return Promise.resolve(scanCache.get(url))
     return withTimeout(
       new Promise((resolve, reject) => {

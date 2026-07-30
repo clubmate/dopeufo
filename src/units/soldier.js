@@ -28,7 +28,10 @@ const _mats = new Map()
 let _clipsPromise = null
 
 function url(name) {
-  const b = (import.meta?.env?.BASE_URL) || '/'
+  // Plain `import.meta.env.BASE_URL` — Vite only substitutes the literal text.
+  // With `?.` the expression survives into the bundle, import.meta.env is
+  // undefined in a plain browser, and every .glb 404s off the site root.
+  const b = import.meta.env.BASE_URL || '/'
   return `${b}${BASE}${name}.glb`.replace(/([^:])\/\//g, '$1/')
 }
 
