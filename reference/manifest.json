@@ -1,0 +1,37 @@
+{
+  "_why": [
+    "The critic can only judge us against a shot taken from a camera we actually have.",
+    "Most of this set is promo material: character renders with cinematic depth of",
+    "field, and strategy-layer menus. Comparing our tactical overview against those",
+    "sets a bar no overview camera can clear, and the resulting notes are noise.",
+    "tools/blind.mjs reads this file and refuses a cross-category pairing."
+  ],
+  "categories": {
+    "tactical": "Overview mission camera — what src/input and the shot harness produce by default. Compare our standard screenshots against these.",
+    "shotcam": "Over-the-shoulder targeting view with the firing HUD. Compare shot-cam captures (tools/shotcam.mjs) against these.",
+    "character": "Cinematic/promo close-ups. No tactical HUD, heavy DoF, hand-placed lighting. Useful for material and armour detail only — never for framing, scale or scene composition.",
+    "ui": "Strategy layer and menu screens. No 3D scene to compare against; kept for HUD typography and panel styling reference."
+  },
+  "images": {
+    "xcom2_00.jpg": { "category": "character", "note": "sunset backlight, soldier + sectoid, heavy DoF" },
+    "xcom2_01.jpg": { "category": "character", "note": "Muton render, daylight, snow" },
+    "xcom2_02.jpg": { "category": "character", "note": "ADVENT trooper, city at dusk, warm practicals" },
+    "xcom2_03.jpg": { "category": "character", "note": "soldier with rifle, forest daylight" },
+    "xcom2_04.jpg": { "category": "shotcam", "note": "targeting a Viper, night street, full firing HUD" },
+    "xcom2_05.jpg": { "category": "ui", "note": "mission select, geoscape overlay" },
+    "xcom2_06.jpg": { "category": "ui", "note": "reinforcements feedback popup" },
+    "xcom2_07.jpg": { "category": "ui", "note": "geoscape world map" },
+    "xcom2_08.jpg": { "category": "ui", "note": "research selection screen" },
+    "xcom2_09.jpg": { "category": "ui", "note": "soldier customisation" },
+    "xcom2_10.jpg": { "category": "ui", "note": "loadout / inventory" },
+    "xcom2_11.jpg": { "category": "character", "note": "heavy weapon firing, close, muzzle flash" },
+    "xcom2_12.jpg": { "category": "character", "note": "Andromedon close-up, dusk" },
+    "xcom2_13.jpg": { "category": "character", "note": "ADVENT officer, overcast, fire behind, no HUD" },
+    "xcom2_14.jpg": { "category": "shotcam", "note": "targeting a Faceless, night vegetation, full firing HUD" },
+    "xcom2_15.jpg": { "category": "character", "note": "Archon, dusk, dry landscape" },
+    "xcom2_16.jpg": { "category": "tactical", "note": "interior facility, artificial light, ability tooltip. 662x372 — too small for material detail" },
+    "xcom2_17.jpg": { "category": "tactical", "note": "night urban street, cyan/red rim light, movement path" },
+    "xcom2_18.jpg": { "category": "tactical", "note": "shop interior, overhead, tile grid + yellow path overlay" },
+    "xcom2_19.jpg": { "category": "tactical", "note": "daylight exterior, vegetation, concealment markers — the only daylight reference in the set" }
+  }
+}

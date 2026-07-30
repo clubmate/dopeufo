@@ -12,13 +12,26 @@
  * 1920px JPEG, a sharp critic identifies them by artefacts alone and the "blind"
  * test is worthless.
  *
+ * Category matters just as much. reference/manifest.json splits the set into
+ * tactical / shotcam / character / ui, because most of it is promo material:
+ * cinematic close-ups and menu screens. Pairing our overview camera against a
+ * depth-of-field character render asks the critic to score us on a shot our
+ * camera cannot take, and every note that comes back is noise. So --b must
+ * belong to the requested --category, or this refuses to build the composite.
+ *
  * Usage:
- *   node tools/blind.mjs --a shots/hero.png --b reference/xcom2_03.jpg \
- *                        --out shots/blind/round1.png [--w 1920] [--seed 42]
+ *   # pick a tactical reference automatically (default category)
+ *   node tools/blind.mjs --a shots/hero.png --out shots/blind/round1.png --seed 42
+ *
+ *   # explicit reference, must match the category
+ *   node tools/blind.mjs --a shots/shot.png --b reference/xcom2_14.jpg \
+ *                        --category shotcam --out shots/blind/round2.png
+ *
+ *   [--w 1920] [--seed 42] [--force to override the category check]
  */
 import puppeteer from 'puppeteer'
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { dirname, resolve, extname } from 'node:path'
+import { dirname, resolve, extname, basename, join } from 'node:path'
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, cur, i, arr) => {
@@ -27,8 +40,50 @@ const args = Object.fromEntries(
   }, [])
 )
 
-const A = resolve(args.a)          // ours
-const B = resolve(args.b)          // reference
+const REF_DIR = 'reference'
+const MANIFEST = JSON.parse(readFileSync(join(REF_DIR, 'manifest.json'), 'utf8'))
+const CATEGORY = args.category || 'tactical'
+
+if (!MANIFEST.categories[CATEGORY]) {
+  console.error(`unknown --category "${CATEGORY}". known: ${Object.keys(MANIFEST.categories).join(', ')}`)
+  process.exit(1)
+}
+
+const inCategory = Object.entries(MANIFEST.images)
+  .filter(([, meta]) => meta.category === CATEGORY)
+  .map(([file]) => file)
+  .sort()
+
+// Seeded so a rerun of the same round pairs against the same reference; without
+// a seed we sample the pool, which is what you want across a batch of rounds.
+function pickReference() {
+  if (!inCategory.length) {
+    console.error(`no reference images in category "${CATEGORY}"`)
+    process.exit(1)
+  }
+  const r = seed !== null ? Math.abs(Math.sin(seed * 12.9898) * 43758.5453) % 1 : Math.random()
+  return join(REF_DIR, inCategory[Math.floor(r * inCategory.length) % inCategory.length])
+}
+
+// Coin flip decides which image is on the left.
+const seed = args.seed !== undefined ? parseInt(args.seed, 10) : null
+
+const A = resolve(args.a)                                   // ours
+const bPath = args.b && args.b !== true ? args.b : pickReference()
+const B = resolve(bPath)                                    // reference
+
+const bMeta = MANIFEST.images[basename(bPath)]
+if (!bMeta) {
+  console.warn(`⚠ ${basename(bPath)} is not in ${REF_DIR}/manifest.json — classify it there so the critic pairs it correctly`)
+} else if (bMeta.category !== CATEGORY && !args.force) {
+  console.error(
+    `✗ refusing to pair a "${CATEGORY}" capture against ${basename(bPath)}, which is "${bMeta.category}".\n` +
+      `  ${MANIFEST.categories[bMeta.category]}\n` +
+      `  Pass --category ${bMeta.category} if that is really what you are judging, or --force to override.`
+  )
+  process.exit(1)
+}
+
 const OUT = resolve(args.out || 'shots/blind/blind.png')
 const PANEL_W = parseInt(args.w || '1920', 10)
 const PANEL_H = Math.round((PANEL_W * 9) / 16)
@@ -41,8 +96,6 @@ function dataUri(p) {
   return `data:${mime};base64,${readFileSync(p).toString('base64')}`
 }
 
-// Coin flip decides which image is on the left.
-const seed = args.seed !== undefined ? parseInt(args.seed, 10) : null
 const flip = seed !== null ? (Math.sin(seed) * 10000) % 1 > 0.5 : Math.random() > 0.5
 const left = flip ? { src: A, tag: 'OURS' } : { src: B, tag: 'REFERENCE' }
 const right = flip ? { src: B, tag: 'REFERENCE' } : { src: A, tag: 'OURS' }
@@ -74,9 +127,17 @@ await page.evaluate(() => Promise.all(Array.from(document.images).map((i) => i.d
 await page.screenshot({ path: OUT, type: 'png' })
 await browser.close()
 
-const key = { A: left.tag, B: right.tag, ours: left.tag === 'OURS' ? 'A' : 'B', files: { left: left.src, right: right.src } }
+const key = {
+  A: left.tag,
+  B: right.tag,
+  ours: left.tag === 'OURS' ? 'A' : 'B',
+  category: CATEGORY,
+  reference: { file: basename(bPath), note: bMeta?.note ?? null },
+  files: { left: left.src, right: right.src },
+}
 writeFileSync(`${OUT}.key.json`, JSON.stringify(key, null, 2))
 
 console.log(`✓ ${OUT}`)
+console.log(`  category ${CATEGORY} vs ${basename(bPath)}${bMeta?.note ? ` — ${bMeta.note}` : ''}`)
 console.log(`  key written to ${OUT}.key.json (do NOT show this to the critic)`)
 console.log(`KEY:${JSON.stringify(key)}`)
