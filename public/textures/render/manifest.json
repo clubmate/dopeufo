@@ -1,0 +1,83 @@
+{
+  "concrete": {
+    "slug": "concrete_floor_02",
+    "res": "2k",
+    "maps": {
+      "diff": "concrete_diff.jpg",
+      "arm": "concrete_arm.jpg",
+      "nor": "concrete_nor.jpg"
+    }
+  },
+  "asphalt": {
+    "slug": "asphalt_02",
+    "res": "2k",
+    "maps": {
+      "diff": "asphalt_diff.jpg",
+      "arm": "asphalt_arm.jpg",
+      "nor": "asphalt_nor.jpg"
+    }
+  },
+  "rustedMetal": {
+    "slug": "rusty_metal_04",
+    "res": "1k",
+    "maps": {
+      "diff": "rustedMetal_diff.jpg",
+      "arm": "rustedMetal_arm.jpg",
+      "nor": "rustedMetal_nor.jpg"
+    }
+  },
+  "paintedMetal": {
+    "slug": "green_metal_rust",
+    "res": "1k",
+    "maps": {
+      "diff": "paintedMetal_diff.jpg",
+      "arm": "paintedMetal_arm.jpg",
+      "nor": "paintedMetal_nor.jpg"
+    }
+  },
+  "weatheredWood": {
+    "slug": "weathered_planks",
+    "res": "1k",
+    "maps": {
+      "diff": "weatheredWood_diff.jpg",
+      "arm": "weatheredWood_arm.jpg",
+      "nor": "weatheredWood_nor.jpg"
+    }
+  },
+  "dirt": {
+    "slug": "dirt_floor",
+    "res": "1k",
+    "maps": {
+      "diff": "dirt_diff.jpg",
+      "arm": "dirt_arm.jpg",
+      "nor": "dirt_nor.jpg"
+    }
+  },
+  "gravel": {
+    "slug": "gravel_ground_01",
+    "res": "1k",
+    "maps": {
+      "diff": "gravel_diff.jpg",
+      "arm": "gravel_arm.jpg",
+      "nor": "gravel_nor.jpg"
+    }
+  },
+  "brick": {
+    "slug": "brick_wall_006",
+    "res": "1k",
+    "maps": {
+      "diff": "brick_diff.jpg",
+      "arm": "brick_arm.jpg",
+      "nor": "brick_nor.jpg"
+    }
+  },
+  "fabric": {
+    "slug": "hessian_230",
+    "res": "1k",
+    "maps": {
+      "diff": "fabric_diff.jpg",
+      "arm": "fabric_arm.jpg",
+      "nor": "fabric_nor.jpg"
+    }
+  }
+}

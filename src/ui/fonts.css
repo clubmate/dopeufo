@@ -1,0 +1,59 @@
+/* ============================================================================
+   DOPE UFO — UI type system
+   ----------------------------------------------------------------------------
+   No webfont fetch at runtime (unreliable offline / in the capture harness), so
+   character comes from a carefully ordered *condensed grotesque* stack plus a
+   hard commitment to weight, tracking and case.
+
+   Three roles:
+     --f-display  heavy condensed grotesque. Headlines, banners, the big number.
+     --f-data     monospace. EVERY numeral in the HUD. Tabular alignment is not
+                  cosmetic here — the shot-panel ledger has to visibly sum.
+     --f-micro    same condensed face at caption size, wide tracked, uppercase.
+
+   The display/mono pairing is the vernacular of avionics MFDs and ballistic
+   computers, which is exactly what this interface is pretending to be.
+   ========================================================================== */
+
+/* Verified by measurement, not by document.fonts.check() — which cheerfully
+   returns true for fonts that are not installed. Rendering a known string and
+   comparing advance widths against the sans-serif fallback is the only honest
+   test. Result on this target: DIN Condensed measures 476px against a 796px
+   sans reference, i.e. genuinely 40% narrower, while "Oswald", "Barlow
+   Condensed" et al all silently fell back.
+
+   DIN 1451 is the German industrial standard face — equipment stencils,
+   vehicle plates, road signage. It is the actual vernacular this interface is
+   imitating rather than an approximation of it. macOS ships it Bold-only,
+   which suits us: one heavy weight everywhere, and hierarchy carried by size,
+   tracking and colour instead. */
+:root {
+  --f-display:
+    'DIN Condensed', 'DIN Alternate', 'PT Sans Narrow', 'HelveticaNeue-CondensedBold',
+    'Avenir Next Condensed', 'Roboto Condensed', 'Oswald', 'Arial Narrow',
+    ui-sans-serif, system-ui, sans-serif;
+
+  --f-micro: var(--f-display);
+
+  --f-data:
+    ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'DejaVu Sans Mono',
+    'Consolas', monospace;
+}
+
+/* Never let the browser fake a width or weight we didn't ask for — synthesised
+   condensed type is the single fastest way to look cheap. */
+.ui-root,
+.ui-root * {
+  font-synthesis-weight: none;
+  font-synthesis-style: none;
+  font-kerning: normal;
+  font-variant-ligatures: none;
+}
+
+/* Numerals must never reflow as they tick. */
+.ui-root [data-num],
+.ui-root .num {
+  font-family: var(--f-data);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
